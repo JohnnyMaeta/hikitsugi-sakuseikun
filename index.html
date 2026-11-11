@@ -79,55 +79,36 @@
 // ▼ テンプレートのリンク（スプレッドシートの「…/copy」で終わるURL）。空のあいだは「準備中」と出ます。
 const TEMPLATE_URL = "https://docs.google.com/spreadsheets/d/1aqAwV0_wfG0LUKO1_kMrUUAyrtWBTYrVg9drUmRet7E/copy";
 
-// ▼ 更新履歴。新しい版を出したら、いちばん上に足します。
-const HISTORY = [
-  {
-    version: "2.1.0", date: "2026-11-11",
-    items: [
-      "録音中に、声の大きさに合わせて動く波と、経過時間を出すようにしました。",
-      "録音の「一時停止／再開」「取り直し」「やめる」を足しました。",
-      "ほとんど録れていない音声は、添付せずに知らせます。"
-    ]
-  },
-  {
-    version: "2.0.1", date: "2026-11-11",
-    items: [
-      "業務別ドキュメントの一括作成が、途中で止まることがある点を直しました（1件ずつ作り、通信が切れたら自動で送り直します）。",
-      "作れなかった業務だけを残し、もう一度押すと続きから作れるようにしました。",
-      "どの業務で止まったかを表示します。"
-    ]
-  },
-  {
-    version: "2.0.0", date: "2026-11-10",
-    items: [
-      "シートごとの合言葉で守るようにしました。合言葉のない通信はすべて断ります。",
-      "コードは、コピーしたシート自身のメニューから受け取る形にしました。",
-      "ドキュメントの統合・取り消しを、台帳にあるものだけに限りました。",
-      "説明書に「大切な注意」を足しました。",
-      "バージョン番号と、古いシートからの「引っ越し」を足しました。"
-    ]
+// ▼ 更新履歴は history.json に書きます（アプリの「更新を確認」も同じファイルを読みます）。
+function render(HISTORY) {
+  document.getElementById("latest").textContent = "v" + HISTORY[0].version + "（" + HISTORY[0].date.replace(/-/g, "/") + "）";
+  if (TEMPLATE_URL) {
+    const a = document.getElementById("template");
+    a.href = TEMPLATE_URL; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = "📄 テンプレートをコピーする（v" + HISTORY[0].version + "）";
+    a.classList.remove("off");
   }
-];
-
-document.getElementById("latest").textContent = "v" + HISTORY[0].version + "（" + HISTORY[0].date.replace(/-/g, "/") + "）";
-if (TEMPLATE_URL) {
-  const a = document.getElementById("template");
-  a.href = TEMPLATE_URL; a.target = "_blank"; a.rel = "noopener";
-  a.textContent = "📄 テンプレートをコピーする（v" + HISTORY[0].version + "）";
-  a.classList.remove("off");
+  const box = document.getElementById("history");
+  box.textContent = "";
+  HISTORY.forEach(function (h, i) {
+    const card = document.createElement("div"); card.className = "card";
+    const head = document.createElement("div"); head.className = "ver";
+    const b = document.createElement("b"); b.textContent = "v" + h.version;
+    const t = document.createElement("time"); t.dateTime = h.date; t.textContent = h.date.replace(/-/g, "/");
+    head.append(b, t);
+    if (i === 0) { const s = document.createElement("span"); s.className = "tag"; s.textContent = "最新"; head.append(s); }
+    const ul = document.createElement("ul");
+    h.items.forEach(function (x) { const li = document.createElement("li"); li.textContent = x; ul.append(li); });
+    card.append(head, ul); box.append(card);
+  });
 }
-const box = document.getElementById("history");
-HISTORY.forEach(function (h, i) {
-  const card = document.createElement("div"); card.className = "card";
-  const head = document.createElement("div"); head.className = "ver";
-  const b = document.createElement("b"); b.textContent = "v" + h.version;
-  const t = document.createElement("time"); t.dateTime = h.date; t.textContent = h.date.replace(/-/g, "/");
-  head.append(b, t);
-  if (i === 0) { const s = document.createElement("span"); s.className = "tag"; s.textContent = "最新"; head.append(s); }
-  const ul = document.createElement("ul");
-  h.items.forEach(function (x) { const li = document.createElement("li"); li.textContent = x; ul.append(li); });
-  card.append(head, ul); box.append(card);
-});
+fetch("history.json?t=" + Date.now(), { cache: "no-store" })
+  .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function (d) { render(d.history); })
+  .catch(function () {
+    document.getElementById("latest").textContent = "読み込めませんでした";
+    document.getElementById("history").textContent = "更新履歴を読み込めませんでした。少し待ってから、ページを開き直してください。";
+  });
 </script>
 </body>
 </html>
