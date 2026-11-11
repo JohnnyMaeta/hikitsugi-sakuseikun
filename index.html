@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>引き継ぎ作成くん｜更新履歴とテンプレート</title>
+<meta name="description" content="引き継ぎ作成くんの更新履歴と、スプレッドシートのテンプレートの受け取り口です。">
+<style>
+  :root { --ink:#1e293b; --sub:#475569; --line:#e2e8f0; --bg:#f8fafc; --main:#4338ca; --warn:#be123c; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif; color:var(--ink); background:var(--bg); line-height:1.8; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.6rem; margin: 8px 0 4px; }
+  h2 { font-size: 1.15rem; margin: 40px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--line); }
+  h3 { font-size: 1rem; margin: 0 0 6px; }
+  p { margin: 8px 0; }
+  .lead { color: var(--sub); }
+  .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin:12px 0; }
+  .btn { display:inline-block; background:var(--main); color:#fff; font-weight:700; text-decoration:none; padding:12px 22px; border-radius:12px; }
+  .btn:hover { opacity:.9; }
+  .btn.off { background:#94a3b8; pointer-events:none; }
+  .now { display:inline-block; font-size:.8rem; font-weight:700; color:var(--main); background:#eef2ff; border:1px solid #c7d2fe; border-radius:999px; padding:2px 12px; }
+  .ver { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .ver b { font-size:1.1rem; }
+  .ver time { color:var(--sub); font-size:.85rem; }
+  .tag { font-size:.72rem; font-weight:700; background:#dcfce7; color:#166534; border-radius:999px; padding:1px 10px; }
+  ul, ol { margin: 6px 0; padding-left: 1.4em; }
+  li { margin: 3px 0; }
+  .warn { border-color:#fecdd3; background:#fff1f2; }
+  .warn h3 { color: var(--warn); }
+  footer { margin-top:48px; padding-top:16px; border-top:1px solid var(--line); color:var(--sub); font-size:.8rem; }
+</style>
+</head>
+<body>
+<main>
+  <p class="now">いまの最新版： <span id="latest"></span></p>
+  <h1>🗂️ 引き継ぎ作成くん</h1>
+  <p class="lead">日々の気づき・声・写真・過去の引き継ぎ書を、業務ごとのGoogleドキュメントに整理していくアプリです。このページでは、更新履歴の確認とテンプレートの受け取りができます。</p>
+
+  <h2>テンプレートを受け取る</h2>
+  <div class="card">
+    <p>下のボタンを押すと、スプレッドシートのコピーが自分のドライブに作られます。使い方は、コピーしたシートの「説明書」に書いてあります。</p>
+    <p><a id="template" class="btn off" href="#">テンプレートは準備中です</a></p>
+    <p class="lead">1人につき1つ、自分専用のコピーを作って使います。Gemini APIキーは要りません。</p>
+  </div>
+
+  <h2>新しい版に乗り換えるには</h2>
+  <div class="card">
+    <p>配ったコピーは自動では新しくなりません。次の順で乗り換えます。これまでに作ったドキュメントは、そのまま使えます。</p>
+    <ol>
+      <li>上のボタンで、新しいテンプレートをコピーします。</li>
+      <li>新しいシートのメニューから「🚚 古いシートから引っ越す」を選び、古いシートのURLを貼ります。</li>
+      <li>新しいシートでデプロイします。</li>
+      <li>「📋 ③ Canvasアプリのコードをコピー」でコードを受け取り、Gemini Canvasに貼り替えます。</li>
+    </ol>
+    <p class="lead">いま使っている版は、Canvas画面の右上か、メニューの「ℹ️ バージョンを確認」で分かります。</p>
+  </div>
+
+  <h2>使うときに守ってほしいこと</h2>
+  <div class="card warn">
+    <h3>⚠️ 個人情報は書かないのが基本です</h3>
+    <ul>
+      <li>児童・保護者の名前や家庭の事情は書きません。学校が認めている場合に限り、イニシャルで書きます。</li>
+      <li>コピーしたシートに、ほかの人を編集者として入れません。</li>
+      <li>コードの画面を、画面共有や大型モニターに映しません（合言葉が入っています）。</li>
+    </ul>
+  </div>
+
+  <h2>更新履歴</h2>
+  <div id="history"></div>
+
+  <footer>
+    <p>制作・著作: 前多 昌顕（Masaaki Maeta）</p>
+    <p>校内・教育現場での利用と職員間での共有は自由です。Webサイト・SNSなどへの無断転載・再配布、商用利用はご遠慮ください。</p>
+  </footer>
+</main>
+
+<script>
+// ▼ テンプレートのリンク（スプレッドシートの「…/copy」で終わるURL）。空のあいだは「準備中」と出ます。
+const TEMPLATE_URL = "https://docs.google.com/spreadsheets/d/1aqAwV0_wfG0LUKO1_kMrUUAyrtWBTYrVg9drUmRet7E/copy";
+
+// ▼ 更新履歴。新しい版を出したら、いちばん上に足します。
+const HISTORY = [
+  {
+    version: "2.1.0", date: "2026-11-11",
+    items: [
+      "録音中に、声の大きさに合わせて動く波と、経過時間を出すようにしました。",
+      "録音の「一時停止／再開」「取り直し」「やめる」を足しました。",
+      "ほとんど録れていない音声は、添付せずに知らせます。"
+    ]
+  },
+  {
+    version: "2.0.1", date: "2026-11-11",
+    items: [
+      "業務別ドキュメントの一括作成が、途中で止まることがある点を直しました（1件ずつ作り、通信が切れたら自動で送り直します）。",
+      "作れなかった業務だけを残し、もう一度押すと続きから作れるようにしました。",
+      "どの業務で止まったかを表示します。"
+    ]
+  },
+  {
+    version: "2.0.0", date: "2026-11-10",
+    items: [
+      "シートごとの合言葉で守るようにしました。合言葉のない通信はすべて断ります。",
+      "コードは、コピーしたシート自身のメニューから受け取る形にしました。",
+      "ドキュメントの統合・取り消しを、台帳にあるものだけに限りました。",
+      "説明書に「大切な注意」を足しました。",
+      "バージョン番号と、古いシートからの「引っ越し」を足しました。"
+    ]
+  }
+];
+
+document.getElementById("latest").textContent = "v" + HISTORY[0].version + "（" + HISTORY[0].date.replace(/-/g, "/") + "）";
+if (TEMPLATE_URL) {
+  const a = document.getElementById("template");
+  a.href = TEMPLATE_URL; a.target = "_blank"; a.rel = "noopener";
+  a.textContent = "📄 テンプレートをコピーする（v" + HISTORY[0].version + "）";
+  a.classList.remove("off");
+}
+const box = document.getElementById("history");
+HISTORY.forEach(function (h, i) {
+  const card = document.createElement("div"); card.className = "card";
+  const head = document.createElement("div"); head.className = "ver";
+  const b = document.createElement("b"); b.textContent = "v" + h.version;
+  const t = document.createElement("time"); t.dateTime = h.date; t.textContent = h.date.replace(/-/g, "/");
+  head.append(b, t);
+  if (i === 0) { const s = document.createElement("span"); s.className = "tag"; s.textContent = "最新"; head.append(s); }
+  const ul = document.createElement("ul");
+  h.items.forEach(function (x) { const li = document.createElement("li"); li.textContent = x; ul.append(li); });
+  card.append(head, ul); box.append(card);
+});
+</script>
+</body>
+</html>
