@@ -39,7 +39,7 @@
 
   <h2>テンプレートを受け取る</h2>
   <div class="card">
-    <p>下のボタンを押すと、スプレッドシートのコピーが自分のドライブに作られます。使い方は、コピーしたシートの「説明書」に書いてあります。</p>
+    <p>下のボタンを押すとテンプレートの画面が開きます。右上の「テンプレートを使用」を押すと、スプレッドシートのコピーが自分のドライブに作られます。使い方は、コピーしたシートの「説明書」に書いてあります。</p>
     <p><a id="template" class="btn off" href="#">テンプレートは準備中です</a></p>
     <p class="lead">1人につき1つ、自分専用のコピーを作って使います。Gemini APIキーは要りません。</p>
   </div>
@@ -76,8 +76,8 @@
 </main>
 
 <script>
-// ▼ テンプレートのリンク（スプレッドシートの「…/copy」で終わるURL）。空のあいだは「準備中」と出ます。
-const TEMPLATE_URL = "https://docs.google.com/spreadsheets/d/1aqAwV0_wfG0LUKO1_kMrUUAyrtWBTYrVg9drUmRet7E/copy";
+// ▼ テンプレートのリンク（スプレッドシートの「…/template/preview」で終わるURL）。空のあいだは「準備中」と出ます。
+const TEMPLATE_URL = "https://docs.google.com/spreadsheets/d/1aqAwV0_wfG0LUKO1_kMrUUAyrtWBTYrVg9drUmRet7E/template/preview";
 
 // ▼ 更新履歴は history.json に書きます（アプリの「更新を確認」も同じファイルを読みます）。
 function render(HISTORY) {
@@ -85,7 +85,7 @@ function render(HISTORY) {
   if (TEMPLATE_URL) {
     const a = document.getElementById("template");
     a.href = TEMPLATE_URL; a.target = "_blank"; a.rel = "noopener";
-    a.textContent = "📄 テンプレートをコピーする（v" + HISTORY[0].version + "）";
+    a.textContent = "📄 テンプレートを開く（v" + HISTORY[0].version + "）";
     a.classList.remove("off");
   }
   const box = document.getElementById("history");
